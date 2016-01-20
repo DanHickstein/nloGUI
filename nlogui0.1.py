@@ -1,35 +1,17 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Apr 15 15:39:12 2014
-This file is part of pyNLO.
-
-    pyNLO is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    pyNLO is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
-@author: dim1
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 from pynlo.interactions.FourWaveMixing import SSFM
 from pynlo.media.fibers import fiber
 from pynlo.light.DerivedPulses import SechPulse
-import scipy.interpolate
+from scipy.interpolate import griddata
 
-def reinterpolate(x,y,Z,nx=1000,ny=1000):
+from matplotlib.widgets import Button, TextBox
+
+
+def reinterpolate(x,y,Z,nx=500,ny=500):
     # x and y are 1D arrays. 
     # z is a 2D array
     # nx and ny are the number of points in the output image
-    from scipy.interpolate import griddata
     
     X,Y = np.meshgrid(x,y) # make 2D arrays
     
@@ -43,88 +25,134 @@ def reinterpolate(x,y,Z,nx=1000,ny=1000):
     return grid_z
     
     
-    
 
-#plt.close('all')
+fig = plt.figure(figsize=(12,8))
 
-dz = 1e-4
-steps = 10
-range1 = np.arange(steps)
+ax1 = plt.subplot2grid((3,4), (0,2))
+ax2 = plt.subplot2grid((3,4), (0,3))
 
-centerwl = 835.0
-fiber_length = 0.01
+ax3 = plt.subplot2grid((3,4), (1,2),rowspan=2)
+ax4 = plt.subplot2grid((3,4), (1,3),rowspan=2)
 
-pump_power = 1.0e4
-pump_pulse_length = 28.4e-3
-npoints = 2**13
+plt.subplots_adjust(left=0.05,bottom=0.09,right=0.96,top=0.96,wspace=0.21,hspace=0.29)
+
+axRun = plt.axes([0.4,0.05,0.09,0.04])
+bRun = Button(axRun, 'Run Simulation')
 
 
-init = SechPulse(pump_power, pump_pulse_length, centerwl, time_window = 10.0,
-                    GDD = 0, TOD = 0.0, NPTS = npoints, frep_MHz = 100, power_is_avg = False)
+###Parameter axes###
+sl = 0.1
+sw = 0.1
+sh = 0.04
+sv = 0.97 #start vertical
+ss = -0.045 #spacing
 
-fiber1 = fiber.FiberInstance() 
-fiber1.load_from_db( fiber_length, 'dudley')
+ax01 = plt.axes([sl, sv+1*ss, sw, sh])
+ax01 = plt.axes([sl, sv+2*ss, sw, sh])
 
-evol = SSFM.SSFM(dz = 1e-6, local_error = 0.001, USE_SIMPLE_RAMAN = True)
-y = np.zeros(steps)
-AW = np.zeros((init.NPTS, steps))
-AT = np.copy(AW)
+ax02   = plt.axes([sl, sv+4*ss, sw, sh])
+ax04    = plt.axes([sl, sv+5*ss, sw, sh])
 
-y, AW, AT, pulse1 = evol.propagate(pulse_in = init, fiber = fiber1, 
-                                   n_steps = steps)
+ax05 = plt.axes([sl, sv+7*ss, sw, sh])
+ax06 = plt.axes([sl, sv+8*ss, sw, sh])
+ax07 = plt.axes([sl, sv+9*ss, sw, sh])
+
+ax07 = plt.axes([sl, sv+11*ss, sw, sh])
+ax08 = plt.axes([sl, sv+12*ss, sw, sh])
+
+# axtnum = plt.axes([sl, sv+14*ss, sw, sh])
+# axtsta = plt.axes([sl, sv+15*ss, sw, sh])
+# axtend = plt.axes([sl, sv+16*ss, sw, sh])
+
+# axcolor = plt.axes([sl, sv+18*ss, sw/2.5, sh*4])
+# axrot   = plt.axes([sl+0.2, sv+18*ss, sw/2.5, sh*4])
+
+
+
+
+
+def run_simulation(caller=None):
+    print caller
+    dz = 1e-4
+    steps = 10
+    range1 = np.arange(steps)
+
+    centerwl = 835.0
+    fiber_length = 0.01
+
+    pump_power = 1.0e4
+    pump_pulse_length = 28.4e-3
+    npoints = 2**13
+
+
+    init = SechPulse(pump_power, pump_pulse_length, centerwl, time_window = 10.0,
+                        GDD = 0, TOD = 0.0, NPTS = npoints, frep_MHz = 100, power_is_avg = False)
+
+    fiber1 = fiber.FiberInstance() 
+    fiber1.load_from_db( fiber_length, 'dudley')
+
+    evol = SSFM.SSFM(dz = 1e-6, local_error = 0.001, USE_SIMPLE_RAMAN = True)
+    y = np.zeros(steps)
+    AW = np.zeros((init.NPTS, steps))
+    AT = np.copy(AW)
+
+    y, AW, AT, pulse1 = evol.propagate(pulse_in = init, fiber = fiber1, 
+                                       n_steps = steps)
                            
-wl = init.wl_nm
+    wl = init.wl_nm
 
-loWL = 400
-hiWL = 1400
+    loWL = 400
+    hiWL = 1400
                          
-iis = np.logical_and(wl>loWL,wl<hiWL)
+    iis = np.logical_and(wl>loWL,wl<hiWL)
 
-iisT = np.logical_and(init.T_ps>-1,init.T_ps<5)
+    iisT = np.logical_and(init.T_ps>-1,init.T_ps<5)
 
-xW = wl[iis]
-xT = init.T_ps[iisT]
-zW_in = np.transpose(AW)[:,iis]
-zT_in = np.transpose(AT)[:,iisT]
-zW = 10*np.log10(np.abs(zW_in)**2)
-zT = 10*np.log10(np.abs(zT_in)**2)
-mlIW = np.max(zW)
-mlIT = np.max(zT)
+    xW = wl[iis]
+    xT = init.T_ps[iisT]
+    zW_in = np.transpose(AW)[:,iis]
+    zT_in = np.transpose(AT)[:,iisT]
+    zW = 10*np.log10(np.abs(zW_in)**2)
+    zT = 10*np.log10(np.abs(zT_in)**2)
+    mlIW = np.max(zW)
+    mlIT = np.max(zT)
 
-D = fiber1.Beta2_to_D(init)
-beta = fiber1.Beta2(init)
-#
-#plt.figure()
-#plt.subplot(121)
-#plt.plot(wl,D,'x')
-#plt.xlim(400,1600)
-#plt.ylim(-400,300)
-#plt.xlabel('Wavelength (nm)')
-#plt.ylabel('D (ps/nm/km)')
-#plt.subplot(122)
-#plt.plot(wl,beta*1000,'x')
-#plt.xlim(400,1600)
-#plt.ylim(-350,200)
-#plt.xlabel('Wavelength (nm)')
-#plt.ylabel(r'$\beta_2$ (ps$^2$/km)')
+    D = fiber1.Beta2_to_D(init)
+    beta = fiber1.Beta2(init)
 
-plt.figure()
-plt.subplot(121)
-# plt.pcolormesh(xW, y, zW, vmin = mlIW - 40.0, vmax = mlIW)
+    print np.shape(wl),np.shape(D)
+    ax1.plot(wl,D)
+    ax1.set_xlim(400,1600)
+    ax1.set_ylim(-400,300)
+    ax1.set_xlabel('Wavelength (nm)')
+    ax1.set_ylabel('D (ps/nm/km)')
 
-data = reinterpolate(xW, y[:-1], zW)
-extent = (np.min(xW),np.max(xW),np.min(y),np.max(y[:-1]))
-plt.imshow(data, extent=extent, vmin = mlIW - 40.0, vmax = mlIW,aspect='auto',origin='lower')
+    ax2.plot(wl,beta*1000)
+    ax2.set_xlim(400,1600)
+    ax2.set_ylim(-350,200)
+    ax2.set_xlabel('Wavelength (nm)')
+    ax2.set_ylabel(r'$\beta_2$ (ps$^2$/km)')
 
-plt.autoscale(tight=True)
-plt.xlim([loWL, hiWL])
-plt.xlabel('Wavelength (nm)')
-plt.ylabel('Distance (m)')
+    zW_grid = reinterpolate(xW, y[:-1], zW)
+    extent = (np.min(xW),np.max(xW),np.min(y),np.max(y[:-1]))
+    ax3.imshow(zW_grid, extent=extent, vmin = mlIW - 40.0, vmax = mlIW,aspect='auto',origin='lower')
 
-plt.subplot(122)
-# plt.pcolorfast(xT, y, zT, vmin = mlIT - 40.0, vmax = mlIT)
-plt.autoscale(tight=True)
-plt.xlabel('Delay (ps)')
-plt.ylabel('Distance (m)')
+    ax3.autoscale(tight=True)
+    ax3.set_xlim([loWL, hiWL])
+    ax3.set_xlabel('Wavelength (nm)')
+    ax3.set_ylabel('Distance (m)')
+
+    # plt.pcolormesh(xT, y, zT, vmin = mlIT - 40.0, vmax = mlIT)
+    
+    zT_grid = reinterpolate(xT, y[:-1], zT)
+    extent = (np.min(xT),np.max(xT),np.min(y),np.max(y[:-1]))
+    ax4.imshow(zT_grid, extent=extent, vmin = mlIT - 40.0, vmax = mlIT,aspect='auto',origin='lower')
+    ax4.autoscale(tight=True)
+    ax4.set_xlabel('Delay (ps)')
+    ax4.set_ylabel('Distance (m)')
+
+bRun.on_clicked(run_simulation)
+
+# run_simulation()
 
 plt.show()
