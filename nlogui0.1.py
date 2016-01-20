@@ -8,18 +8,18 @@ from scipy.interpolate import griddata
 from matplotlib.widgets import Button, TextBox
 
 
-def reinterpolate(x,y,Z,nx=1000,ny=1000):
+def reinterpolate(x,y,Z,nx=500,ny=500):
     # x and y are 1D arrays. 
     # z is a 2D array
     # nx and ny are the number of points in the output image
     
+    print 'Reinterpolating....'
     X,Y = np.meshgrid(x,y) # make 2D arrays
     
     x_even = np.linspace(np.min(x),np.max(x),nx)
     y_even = np.linspace(np.min(y),np.max(y),ny)
     grid_x, grid_y = np.meshgrid(x_even,y_even)
     
-    print np.shape(X),np.shape(Y), np.shape(Z)
     grid_z = griddata((X.ravel(),Y.ravel()), Z.ravel(), (grid_x, grid_y), method='nearest')
     
     return grid_z
@@ -114,7 +114,7 @@ def run_simulation(caller=None):
     fiber1 = fiber.FiberInstance() 
     fiber1.load_from_db( fiber_length, 'dudley')
 
-    evol = SSFM.SSFM(dz = 1e-6, local_error = 0.001, USE_SIMPLE_RAMAN = True)
+    evol = SSFM.SSFM(dz = dz, local_error = 0.001, USE_SIMPLE_RAMAN = True)
     y = np.zeros(steps)
     AW = np.zeros((init.NPTS, steps))
     AT = np.copy(AW)
