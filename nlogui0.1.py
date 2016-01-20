@@ -8,7 +8,7 @@ from scipy.interpolate import griddata
 from matplotlib.widgets import Button, TextBox
 
 
-def reinterpolate(x,y,Z,nx=500,ny=500):
+def reinterpolate(x,y,Z,nx=1000,ny=1000):
     # x and y are 1D arrays. 
     # z is a 2D array
     # nx and ny are the number of points in the output image
@@ -26,7 +26,10 @@ def reinterpolate(x,y,Z,nx=500,ny=500):
     
     
 
-fig = plt.figure(figsize=(12,8))
+fig = plt.figure(figsize=(13,9))
+
+axL1 = plt.subplot2grid((3,4), (2,0))
+axL2 = plt.subplot2grid((3,4), (2,1))
 
 ax1 = plt.subplot2grid((3,4), (0,2))
 ax2 = plt.subplot2grid((3,4), (0,3))
@@ -36,29 +39,41 @@ ax4 = plt.subplot2grid((3,4), (1,3),rowspan=2)
 
 plt.subplots_adjust(left=0.05,bottom=0.09,right=0.96,top=0.96,wspace=0.21,hspace=0.29)
 
-axRun = plt.axes([0.4,0.05,0.09,0.04])
+
+axRun = plt.axes([0.4,0.90,0.09,0.04])
 bRun = Button(axRun, 'Run Simulation')
 
 
 ###Parameter axes###
-sl = 0.1
+sl = 0.2
 sw = 0.1
 sh = 0.04
 sv = 0.97 #start vertical
 ss = -0.045 #spacing
 
 ax01 = plt.axes([sl, sv+1*ss, sw, sh])
-ax01 = plt.axes([sl, sv+2*ss, sw, sh])
+ax02 = plt.axes([sl, sv+2*ss, sw, sh])
+ax03 = plt.axes([sl, sv+3*ss, sw, sh])
 
-ax02   = plt.axes([sl, sv+4*ss, sw, sh])
-ax04    = plt.axes([sl, sv+5*ss, sw, sh])
+ax04 = plt.axes([sl, sv+5*ss, sw, sh])
 
 ax05 = plt.axes([sl, sv+7*ss, sw, sh])
 ax06 = plt.axes([sl, sv+8*ss, sw, sh])
 ax07 = plt.axes([sl, sv+9*ss, sw, sh])
+# ax08 = plt.axes([sl, sv+10*ss, sw, sh])
 
-ax07 = plt.axes([sl, sv+11*ss, sw, sh])
-ax08 = plt.axes([sl, sv+12*ss, sw, sh])
+# ax08 = plt.axes([sl, sv+12*ss, sw, sh])
+
+bPulse = TextBox(ax01,'Pulse duration (ps)',initial='0.0284')
+bWave  = TextBox(ax02,'Center wavelength (nm)',initial='835')
+bPower = TextBox(ax03,'Pulse peak power (kW)',initial='10') # should change to pulse energy
+
+bLength = TextBox(ax04,'Fiber length (mm)',initial='10') 
+
+bDz    = TextBox(ax05,'dz',initial='0.0001') 
+bSteps = TextBox(ax06,'Steps',initial='100') 
+bPoints = TextBox(ax07,'Simulations points',initial='2**13') 
+
 
 # axtnum = plt.axes([sl, sv+14*ss, sw, sh])
 # axtsta = plt.axes([sl, sv+15*ss, sw, sh])
@@ -68,22 +83,30 @@ ax08 = plt.axes([sl, sv+12*ss, sw, sh])
 # axrot   = plt.axes([sl+0.2, sv+18*ss, sw/2.5, sh*4])
 
 
-
-
-
 def run_simulation(caller=None):
-    print caller
-    dz = 1e-4
-    steps = 10
-    range1 = np.arange(steps)
+    
+    pump_pulse_length = float(bPulse.text)
+    centerwl          = float(bWave.text) # in nm
+    pump_power        = float(bPower.text) * 1e3
+    
+    fiber_length = float(bLength.text) * 1e-3
 
-    centerwl = 835.0
-    fiber_length = 0.01
+    dz    = float(bDz.text)
+    steps = int(bSteps.text)
 
-    pump_power = 1.0e4
-    pump_pulse_length = 28.4e-3
-    npoints = 2**13
-
+    npoints = int(eval(bPoints.text))
+    
+    print 'Running simulation with'
+    print 'Pulse duration (fs): %f'%pump_pulse_length
+    print 'Center wavelength (nm): %f'%centerwl
+    print 'Pump power (W): %f'%pump_power
+    
+    print 'Fiber length (m): %f'%fiber_length
+    
+    print 'dz: %f'%dz
+    print 'Steps: %i'%steps
+    print 'Number of points: %i'%npoints
+    
 
     init = SechPulse(pump_power, pump_pulse_length, centerwl, time_window = 10.0,
                         GDD = 0, TOD = 0.0, NPTS = npoints, frep_MHz = 100, power_is_avg = False)
@@ -120,18 +143,20 @@ def run_simulation(caller=None):
     D = fiber1.Beta2_to_D(init)
     beta = fiber1.Beta2(init)
 
-    print np.shape(wl),np.shape(D)
-    ax1.plot(wl,D)
-    ax1.set_xlim(400,1600)
-    ax1.set_ylim(-400,300)
-    ax1.set_xlabel('Wavelength (nm)')
-    ax1.set_ylabel('D (ps/nm/km)')
+    for ax in (ax1,ax2,ax3,ax4):
+        ax.clear()
+        
+    axL1.plot(wl,D)
+    axL1.set_xlim(400,1600)
+    axL1.set_ylim(-400,300)
+    axL1.set_xlabel('Wavelength (nm)')
+    axL1.set_ylabel('D (ps/nm/km)')
 
-    ax2.plot(wl,beta*1000)
-    ax2.set_xlim(400,1600)
-    ax2.set_ylim(-350,200)
-    ax2.set_xlabel('Wavelength (nm)')
-    ax2.set_ylabel(r'$\beta_2$ (ps$^2$/km)')
+    axL2.plot(wl,beta*1000)
+    axL2.set_xlim(400,1600)
+    axL2.set_ylim(-350,200)
+    axL2.set_xlabel('Wavelength (nm)')
+    axL2.set_ylabel(r'$\beta_2$ (ps$^2$/km)')
 
     zW_grid = reinterpolate(xW, y[:-1], zW)
     extent = (np.min(xW),np.max(xW),np.min(y),np.max(y[:-1]))
@@ -141,6 +166,7 @@ def run_simulation(caller=None):
     ax3.set_xlim([loWL, hiWL])
     ax3.set_xlabel('Wavelength (nm)')
     ax3.set_ylabel('Distance (m)')
+    
 
     # plt.pcolormesh(xT, y, zT, vmin = mlIT - 40.0, vmax = mlIT)
     
@@ -149,7 +175,19 @@ def run_simulation(caller=None):
     ax4.imshow(zT_grid, extent=extent, vmin = mlIT - 40.0, vmax = mlIT,aspect='auto',origin='lower')
     ax4.autoscale(tight=True)
     ax4.set_xlabel('Delay (ps)')
-    ax4.set_ylabel('Distance (m)')
+    # ax4.set_ylabel('Distance (m)')
+    for label in ax4.get_yticklabels():
+        label.set_visible(False)
+        
+    ax1.plot(xW,zW[0],color='b',label='Before')
+    ax1.plot(xW,zW[-1],color='r',label='After')
+    ax1.set_ylim(-40,0)
+    
+    ax2.plot(xT,zT[0],color='b',label='Before')
+    ax2.plot(xT,zT[-1],color='r',label='After')
+    ax2.set_ylim(-10,40)
+    
+    
 
 bRun.on_clicked(run_simulation)
 
