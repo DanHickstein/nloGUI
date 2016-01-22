@@ -68,7 +68,7 @@ bLength = TextBox(ax04,'Fiber length (mm)',initial='10')
 
 bDz    = TextBox(ax05,'dz',initial='0.0001') 
 bSteps = TextBox(ax06,'Steps',initial='100') 
-bPoints = TextBox(ax07,'Simulations points',initial='2**13')
+bPoints = TextBox(ax07,'Simulation points',initial='2**13')
 
 lineL1, = axL1.plot(0,0) # make some dummy lines to hold future data
 lineL2, = axL2.plot(0,0)
@@ -83,7 +83,7 @@ line2b, = ax2.plot(0,0,color='r') # make some dummy lines to hold future data
 
 def run_simulation(caller=None,prop=False):
     print 'prop: ',prop
-    print caller
+
     pump_pulse_length = float(bPulse.text)
     centerwl          = float(bWave.text) # in nm
     pump_power        = float(bPower.text) * 1e3
@@ -107,16 +107,19 @@ def run_simulation(caller=None,prop=False):
     print 'Number of points: %i'%npoints
     
 
-    init = SechPulse(pump_power, pump_pulse_length, centerwl, time_window = 10.0,
-                        GDD = 0, TOD = 0.0, NPTS = npoints, frep_MHz = 100, power_is_avg = False)
+    init = SechPulse(pump_power, pump_pulse_length, centerwl, time_window=5.0,
+                        GDD=0, TOD=0.0, NPTS=npoints, frep_MHz=100, power_is_avg=False)
 
     fiber1 = fiber.FiberInstance() 
     fiber1.load_from_db( fiber_length, 'dudley')
     
-    evol = SSFM.SSFM(dz = dz, local_error = 0.001, USE_SIMPLE_RAMAN = True)
+    evol = SSFM.SSFM(dz=dz, local_error=0.001, USE_SIMPLE_RAMAN=True)
     y = np.zeros(steps)
     AW = np.zeros((init.NPTS, steps))
     AT = np.copy(AW)
+    
+    y, AW, AT, pulse1 = evol.propagate(pulse_in = init, fiber = fiber1, 
+                                       n_steps = steps)
     
                            
     wl = init.wl_nm
@@ -140,10 +143,7 @@ def run_simulation(caller=None,prop=False):
     D = fiber1.Beta2_to_D(init)
     beta = fiber1.Beta2(init)
 
-    for ax in (ax1,ax2,ax3,ax4):
-        ax.clear()
-    
-    print wl,D
+
     lineL1.set_data(wl[wl>0],D[wl>0])
     axL1.set_xlim(400,1600)
     axL1.set_ylim(-400,300)
@@ -159,12 +159,17 @@ def run_simulation(caller=None,prop=False):
      
     if prop==False: return
     
-    y, AW, AT, pulse1 = evol.propagate(pulse_in = init, fiber = fiber1, 
-                                       n_steps = steps)
+    for ax in (ax3,ax4):
+        ax.clear()
+    
+
+    print AW
 
     zW_grid = reinterpolate(xW, y[:-1], zW)
     extent = (np.min(xW),np.max(xW),np.min(y),np.max(y[:-1]))
     ax3.imshow(zW_grid, extent=extent, vmin = mlIW - 40.0, vmax = mlIW,aspect='auto',origin='lower')
+    
+    print zW_grid
 
     ax3.autoscale(tight=True)
     ax3.set_xlim([loWL, hiWL])
@@ -180,15 +185,19 @@ def run_simulation(caller=None,prop=False):
     for label in ax4.get_yticklabels():
         label.set_visible(False)
         
-    ax1.plot(xW,zW[0],color='b',label='Before')
-    ax1.plot(xW,zW[-1],color='r',label='After')
+    line1a.set_data(xW,zW[0])
+    line1b.set_data(xW,zW[-1])
+    ax1.relim(); ax1.autoscale_view()
     ax1.set_ylim(-40,0)
     
-    ax2.plot(xT,zT[0],color='b',label='Before')
-    ax2.plot(xT,zT[-1],color='r',label='After')
+    line2a.set_data(xT,zT[0])
+    line2b.set_data(xT,zT[-1])
+    ax2.relim(); ax2.autoscale_view()
     ax2.set_ylim(-10,40)
+    
 
-def run_simulation_full():
+
+def run_simulation_full(caller=None):
     run_simulation(prop=True)
 
 
