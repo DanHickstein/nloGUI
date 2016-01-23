@@ -119,7 +119,12 @@ line1b, = ax1.plot(0,0,color='r')
 
 line2a, = ax2.plot(0,0,color='b') 
 line2b, = ax2.plot(0,0,color='r') 
+###########
 
+# add in some vertical lines that represent the laser wavelength and the central wavelenght of the beta expansion
+# update these lines in the L1 and L2 plots whenever they are updated
+
+##########
 axL1.axhline(0,alpha=0.5,color='k')
 axL2.axhline(0,alpha=0.5,color='k')
 
