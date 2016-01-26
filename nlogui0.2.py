@@ -25,7 +25,6 @@ def reinterpolate(x,y,Z,nx=500,ny=500):
     return grid_z
     
     
-
 fig = plt.figure(figsize=(13,9))
 
 axL1 = plt.subplot2grid((3,4), (2,0))
@@ -39,10 +38,8 @@ ax4 = plt.subplot2grid((3,4), (1,3),rowspan=2)
 
 plt.subplots_adjust(left=0.05,bottom=0.09,right=0.96,top=0.96,wspace=0.21,hspace=0.29)
 
-
 axRun = plt.axes([0.4,0.90,0.09,0.04])
 bRun = Button(axRun, 'Run Simulation')
-
 
 ###Parameter axes###
 sl = 0.2
@@ -60,9 +57,6 @@ ax04 = plt.axes([sl, sv+5*ss, sw, sh])
 ax05 = plt.axes([sl, sv+7*ss, sw, sh])
 ax06 = plt.axes([sl, sv+8*ss, sw, sh])
 ax07 = plt.axes([sl, sv+9*ss, sw, sh])
-# ax08 = plt.axes([sl, sv+10*ss, sw, sh])
-
-# ax08 = plt.axes([sl, sv+12*ss, sw, sh])
 
 bPulse = TextBox(ax01,'Pulse duration (ps)',initial='0.0284')
 bWave  = TextBox(ax02,'Center wavelength (nm)',initial='835')
@@ -73,14 +67,6 @@ bLength = TextBox(ax04,'Fiber length (mm)',initial='10')
 bDz    = TextBox(ax05,'dz',initial='0.0001') 
 bSteps = TextBox(ax06,'Steps',initial='100') 
 bPoints = TextBox(ax07,'Simulations points',initial='2**13') 
-
-
-# axtnum = plt.axes([sl, sv+14*ss, sw, sh])
-# axtsta = plt.axes([sl, sv+15*ss, sw, sh])
-# axtend = plt.axes([sl, sv+16*ss, sw, sh])
-
-# axcolor = plt.axes([sl, sv+18*ss, sw/2.5, sh*4])
-# axrot   = plt.axes([sl+0.2, sv+18*ss, sw/2.5, sh*4])
 
 
 def run_simulation(caller=None):
@@ -108,7 +94,7 @@ def run_simulation(caller=None):
     print 'Number of points: %i'%npoints
     
 
-    init = SechPulse(pump_power, pump_pulse_length, centerwl, time_window = 10.0,
+    init = SechPulse(pump_power, pump_pulse_length, centerwl, time_window = 5.0,
                         GDD = 0, TOD = 0.0, NPTS = npoints, frep_MHz = 100, power_is_avg = False)
 
     fiber1 = fiber.FiberInstance() 
@@ -187,10 +173,6 @@ def run_simulation(caller=None):
     ax2.plot(xT,zT[-1],color='r',label='After')
     ax2.set_ylim(-10,40)
     
-    
 
 bRun.on_clicked(run_simulation)
-
-# run_simulation()
-
 plt.show()
