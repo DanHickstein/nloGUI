@@ -7,174 +7,29 @@ from pynlo.media.fibers import fiber
 from pynlo.light.DerivedPulses import SechPulse
 from matplotlib.widgets import Button, TextBox, CheckButtons
 import time
+import scipy.integrate
+from autoscale_magic import autoscale_y
 
-
-# iPulse = '0.100' # pulse duration (ps)
-# iWave  = '1550'    # pulse central wavelength (nm)
-# iPower = '.03'     # pulse peak power (kW)
-# iGDD   = '0.0'     # Group delay dispersion (ps^2)
-# iTOD   = '0.0'     # Third order dispersion (ps^3)
-#
-# iWindow = '24.0'  # simulation window (ps)
-# iSteps  = '50'    # simulation steps
-# iPoints = '2**13' # simulation points
-#
-# iLength = '300'    # fiber length (mm)
-# iGamma =  '1400'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
-# iBeta2 =  '-50'  # Beta_2 (ps^2/km)
-# iBeta3 = '-0.1'   # Beta_3 (ps^3/km)
-# iBeta4 = '0.0000'   # Beta_4 (ps^4/km)
-# iFibWL = '1550'   # Center WL (nm)
-#
-# iRaman = True
-# iSteep = True
-
-
-# flat dispersion
-iPulse = '0.100' # pulse duration (ps)
+iPulse = '0.200' # pulse duration (ps)
 iWave  = '1550'    # pulse central wavelength (nm)
-iPower = '.03'     # pulse peak power (kW)
+iEPP   = '100'     # Pulse energy (pJ)
 iGDD   = '0.0'     # Group delay dispersion (ps^2)
 iTOD   = '0.0'     # Third order dispersion (ps^3)
 
-iWindow = '24.0'  # simulation window (ps)
+iWindow = '10.0'  # simulation window (ps)
 iSteps  = '50'    # simulation steps
 iPoints = '2**13' # simulation points
 
-iLength = '100'    # fiber length (mm)
-iGamma =  '4000'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
-iBeta2 =  '500'  # Beta_2 (ps^2/km)
-iBeta3 = '0'   # Beta_3 (ps^3/km)
-iBeta4 = '0.0000'   # Beta_4 (ps^4/km)
+iLength = '50'    # fiber length (mm)
+iAlpha  = '0.9'   # attentuation coefficient
+iGamma =  '1000'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
+iBeta2 =  '-200'  # Beta_2 (ps^2/km)
+iBeta3 = '-1'   # Beta_3 (ps^3/km)
+iBeta4 = '0.02'   # Beta_4 (ps^4/km)
 iFibWL = '1550'   # Center WL (nm)
 
 iRaman = True
 iSteep = True
-
-
-
-
-# #  Scott's silica HNLF example
-# iPulse = '0.200' # pulse duration (ps)
-# iWave  = '1550'    # pulse central wavelength (nm)
-# iPower = '.78'     # pulse peak power (kW)
-# iGDD   = '0.0'     # Group delay dispersion (ps^2)
-# iTOD   = '0.0'     # Third order dispersion (ps^3)
-#
-# iWindow = '24.0'  # simulation window (ps)
-# iSteps  = '50'    # simulation steps
-# iPoints = '2**13' # simulation points
-#
-# iLength = '4000'    # fiber length (mm)
-# iGamma =  '11'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
-# iBeta2 =  '-7.7'  # Beta_2 (ps^2/km)
-# iBeta3 = '0.05'   # Beta_3 (ps^3/km)
-# iBeta4 = '0.0000'   # Beta_4 (ps^4/km)
-# iFibWL = '1550'   # Center WL (nm)
-
-
-# # short wavelength dispersive wave:
-# iPulse = '0.200' # pulse duration (ps)
-# iWave  = '1550'    # pulse central wavelength (nm)
-# iPower = '.03'     # pulse peak power (kW)
-#
-# iWindow = '10.0'  # simulation window (ps)
-# iSteps  = '100'    # simulation steps
-# iPoints = '2**13' # simulation points
-#
-# iLength = '300'    # fiber length (mm)
-# iGamma =  '1400'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
-# iBeta2 =  '-10'  # Beta_2 (ps^2/km)
-# iBeta3 = '0.08'   # Beta_3 (ps^3/km)
-# iBeta4 = '0.0000'   # Beta_4 (ps^4/km)
-# iFibWL = '1550'   # Center WL (nm)
-
-
-
-# # IR dispersive wave:
-# iPulse = '0.200' # pulse duration (ps)
-# iWave  = '1550'    # pulse central wavelength (nm)
-# iPower = '.03'     # pulse peak power (kW)
-#
-# iWindow = '10.0'  # simulation window (ps)
-# iSteps  = '100'    # simulation steps
-# iPoints = '2**13' # simulation points
-#
-# iLength = '300'    # fiber length (mm)
-# iBeta2 =  '-10'  # Beta_2 (ps^2/km)
-# iBeta3 = '-0.08'   # Beta_3 (ps^3/km)
-# iBeta4 = '0.0000'   # Beta_4 (ps^4/km)
-# iFibWL = '1550'   # Center WL (nm)
-
-
-# double dispersive wave:
-# iPulse = '0.200' # pulse duration (ps)
-# iWave  = '1550'    # pulse central wavelength (nm)
-# iPower = '.03'     # pulse peak power (kW)
-#
-# iWindow = '10.0'  # simulation window (ps)
-# iSteps  = '100'    # simulation steps
-# iPoints = '2**13' # simulation points
-#
-# iLength = '300'    # fiber length (mm)
-# iGamma =  '1400'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
-#
-# iBeta2 =  '-10'  # Beta_2 (ps^2/km)
-# iBeta3 = '-0.00'   # Beta_3 (ps^3/km)
-# iBeta4 = '0.0008'   # Beta_4 (ps^4/km)
-# iFibWL = '1550'   # Center WL (nm)
-
-
-# # Weak high energy dispersive wave forced with too much negative B2
-# iPulse = '0.200' # pulse duration (ps)
-# iWave  = '1550'    # pulse central wavelength (nm)
-# iPower = '.03'     # pulse peak power (kW)
-#
-# iWindow = '10.0'  # simulation window (ps)
-# iSteps  = '100'    # simulation steps
-# iPoints = '2**13' # simulation points
-#
-# iLength = '300'    # fiber length (mm)
-# iBeta2 =  '-100'  # Beta_2 (ps^2/km)
-# iBeta3 = '0.8'   # Beta_3 (ps^3/km)
-# iBeta4 = '0.0000'   # Beta_4 (ps^4/km)
-# iFibWL = '1550'   # Center WL (nm)
-
-
-# long fiber, sneak up slow -> Mega supercontinuum
-# iPulse = '0.200' # pulse duration (ps)
-# iWave  = '1550'    # pulse central wavelength (nm)
-# iPower = '.03'     # pulse peak power (kW)
-#
-# iWindow = '10.0'  # simulation window (ps)
-# iSteps  = '100'    # simulation steps
-# iPoints = '2**13' # simulation points
-#
-# iLength = '800'    # fiber length (mm)
-# iGamma =  '1400'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
-# iBeta2 =  '-1'  # Beta_2 (ps^2/km)
-# iBeta3 = '0.008'   # Beta_3 (ps^3/km)
-# iBeta4 = '0.0000'   # Beta_4 (ps^4/km)
-# iFibWL = '1550'   # Center WL (nm)
-
-
-# # Long fiber, use 4th order dispersion
-# iPulse = '0.200' # pulse duration (ps)
-# iWave  = '1550'    # pulse central wavelength (nm)
-# iPower = '.03'     # pulse peak power (kW)
-#
-# iWindow = '10.0'  # simulation window (ps)
-# iSteps  = '100'    # simulation steps
-# iPoints = '2**13' # simulation points
-#
-# iLength = '800'    # fiber length (mm)
-# iGamma =  '1400'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
-# iBeta2 =  '-1'  # Beta_2 (ps^2/km)
-# iBeta3 = '0.000'   # Beta_3 (ps^3/km)
-# iBeta4 = '0.00005'   # Beta_4 (ps^4/km)
-# iFibWL = '1550'   # Center WL (nm)
-
-
 
 auto_run = True  # determines if the simulation should be run upon running the script
 
@@ -191,6 +46,8 @@ fig1 = plt.figure(figsize=(13,8))
 
 axL1 = plt.subplot2grid((3,4), (2,0))
 axL2 = plt.subplot2grid((3,4), (2,1),sharex=axL1)
+axL3 = plt.subplot2grid((3,4), (1,1),sharex=axL1)
+axL4 = plt.subplot2grid((3,4), (0,1),sharex=axL1)
 
 ax1 = plt.subplot2grid((3,4), (0,2),sharex=axL1)
 ax2 = plt.subplot2grid((3,4), (0,3))
@@ -236,16 +93,18 @@ ax11 = plt.axes([sl, sv+13*ss, sw, sh])
 ax12 = plt.axes([sl, sv+14*ss, sw, sh])
 ax13 = plt.axes([sl, sv+15*ss, sw, sh])
 ax14 = plt.axes([sl, sv+16*ss, sw, sh])
+ax15 = plt.axes([sl, sv+17*ss, sw, sh])
 
-ax15 = plt.axes([sl-0.3, sv+18*ss, sw*1.8, sh*2])
 
-ax17 = plt.axes([sl, sv+21*ss, sw, sh])
-ax18 = plt.axes([sl, sv+22*ss, sw, sh])
-ax19 = plt.axes([sl, sv+23*ss, sw, sh])
+ax16 = plt.axes([sl-0.3, sv+19*ss, sw*1.8, sh*2])
+
+ax17 = plt.axes([sl, sv+22*ss, sw, sh])
+ax18 = plt.axes([sl, sv+23*ss, sw, sh])
+ax19 = plt.axes([sl, sv+24*ss, sw, sh])
 
 bPulse = TextBox(ax01,'Pulse duration (ps)',   initial=iPulse)
 bWave  = TextBox(ax02,'Center wavelength (nm)',initial=iWave); bWave.label.set_color('m')
-bPower = TextBox(ax03,'Pulse peak power (kW)', initial=iPower) # should change to pulse energy
+bEPP   = TextBox(ax03,'Energy per pulse (pJ)', initial=iEPP)
 bGDD   = TextBox(ax04,'GDD', initial=iGDD)
 bTOD   = TextBox(ax05,'TOD', initial=iTOD) 
 
@@ -254,33 +113,40 @@ bSteps = TextBox(ax07,'Steps',             initial=iSteps)
 bPoints= TextBox(ax08,'Simulation points', initial=iPoints)
 
 bLength= TextBox(ax09,'Fiber length (mm)', initial=iLength)
-bGamma = TextBox(ax10,'Gamma (1/(W km))',  initial=iGamma) 
-bBeta2 = TextBox(ax11,'Beta_2 (ps^2/km)',  initial=iBeta2) 
-bBeta3 = TextBox(ax12,'Beta_3 (ps^3/km)',  initial=iBeta3)
-bBeta4 = TextBox(ax13,'Beta_4 (ps^4/km)',  initial=iBeta4) 
-bFibWL = TextBox(ax14,'Center WL (nm)',    initial=iFibWL); bFibWL.label.set_color('g')
+bAlpha = TextBox(ax10,'Loss (alpha) (dB/cm)',initial=iAlpha)
 
-bCheck = CheckButtons(ax15,('Include Raman response', 'Include self steepening'),(iRaman,iSteep))
+bGamma = TextBox(ax11,'Gamma (1/(W km))',  initial=iGamma) 
+bBeta2 = TextBox(ax12,'Beta_2 (ps^2/km)',  initial=iBeta2) 
+bBeta3 = TextBox(ax13,'Beta_3 (ps^3/km)',  initial=iBeta3)
+bBeta4 = TextBox(ax14,'Beta_4 (ps^4/km)',  initial=iBeta4) 
+bFibWL = TextBox(ax15,'Center WL (nm)',    initial=iFibWL); bFibWL.label.set_color('g')
+
+bCheck = CheckButtons(ax16,('Include Raman response', 'Include self steepening'),(iRaman,iSteep))
 
 bScale = Button(ax17, 'Rescale plots')
 bCalc  = Button(ax18, 'Calc Dispersion')
 bRun   = Button(ax19, 'Run Simulation')
 
-buttons = (bPulse, bWave, bPower, bWindow, bSteps, bPoints, bLength, bGamma, bBeta2, bBeta3, bFibWL)
+buttons = (bPulse, bWave, bEPP, bWindow, bSteps, bPoints, bLength, bGamma, bBeta2, bBeta3, bFibWL, bAlpha)
 
 
 axL1.set_xlabel('Frequency (Hz)')
 axL1.set_ylabel('D (ps/nm/km)')
 axL2.set_xlabel('Frequency (Hz)')
 axL2.set_ylabel(r'$\beta_2$ (ps$^2$/km)')
+axL3.set_ylabel('FWM phase mismatch (1/m)')
 
 ax1.set_xlabel('Frequency (Hz)')
 ax1.set_ylabel('Intensity (dB)')
 ax2.set_xlabel('Time (ps)')
 
 
-lineL1, = axL1.plot(0,0) # make some dummy lines to hold future data
-lineL2, = axL2.plot(0,0)
+lineL1,  = axL1.plot(0,0) # make some dummy lines to hold future data
+lineL2,  = axL2.plot(0,0)
+lineL3a, = axL3.plot(0,0)
+lineL3b, = axL3.plot(0,0)
+
+lineL4, = axL4.plot(0,0)
 
 line1a, = ax1.plot(0,0,color='b') 
 line1b, = ax1.plot(0,0,color='r',lw=1.5) 
@@ -293,6 +159,7 @@ vline1b = axL1.axvline(0,color='g',lw=1.5,alpha=0.5)
 vline2a = axL2.axvline(0,color='m',alpha=0.5)
 vline2b = axL2.axvline(0,color='g',lw=1.5,alpha=0.5)
 
+hline3 =  axL3.axhline(0,color='k',lw=1.5,alpha=0.5)
 
 axL1.axhline(0,alpha=0.5,color='k')
 axL2.axhline(0,alpha=0.5,color='k')
@@ -305,7 +172,7 @@ def run_simulation(caller=None,prop=False):
     # Grab the parameters from the text boxes: 
     pump_pulse_length = float(bPulse.text)
     centerwl          = float(bWave.text) # in nm
-    pump_power        = float(bPower.text) * 1e3
+    pump_EPP          = float(bEPP.text) * 1e-12
     GDD               = float(bGDD.text)
     TOD               = float(bTOD.text)
     
@@ -314,6 +181,7 @@ def run_simulation(caller=None,prop=False):
     npoints = int(eval(bPoints.text))
     
     fiber_length = float(bLength.text) * 1e-3
+    alpha = np.log((10**(float(bAlpha.text)*0.1)))*100 # convert from dB/cm to 1/m
     gamma = float(bGamma.text)
     beta2 = float(bBeta2.text)
     beta3 = float(bBeta3.text)
@@ -325,28 +193,31 @@ def run_simulation(caller=None,prop=False):
     
     
     # set up the pulse parameters
-    pulse = SechPulse(pump_power, pump_pulse_length, centerwl, time_window=window,
+    pulse = SechPulse(1, pump_pulse_length, centerwl, time_window=window,
                         GDD=GDD, TOD=TOD, NPTS=npoints, frep_MHz=100, power_is_avg=False)
 
+    pulse.set_epp(pump_EPP)
+
     fiber1 = fiber.FiberInstance() 
-    fiber1.generate_fiber(fiber_length,center_wl_nm=fibWL,betas=(beta2,beta3,beta4),gamma_W_m=gamma*1e-3,gvd_units='ps^n/km')
+    fiber1.generate_fiber(fiber_length,center_wl_nm=fibWL,betas=(beta2,beta3,beta4),gamma_W_m=gamma*1e-3,gvd_units='ps^n/km',gain=-alpha)
+    
     
     # fiber1.load_from_db(fiber_length, 'dudley')
     
     print 'Parameters\n------------------'
     print '--Pulse--'
-    print 'Duration (ps)  %f'%pump_pulse_length
-    print 'Center wl (nm) %g'%centerwl
-    print 'Pump power (W) %g'%pump_power
-    print '  Energy (nJ)  %f'%(pulse.calc_epp()*1e9)
-    print 'GDD (ps^2)     %f'%(GDD)
-    print 'TOD (ps^3)     %f'%(TOD)
+    print 'Duration (ps)    %f'%pump_pulse_length
+    print 'Center wl (nm)   %g'%centerwl
+    print 'Pulse energy(pJ) %g'%(pump_EPP * 1e12)
+    print 'GDD (ps^2)       %f'%(GDD)
+    print 'TOD (ps^3)       %f'%(TOD)
     print '--Simulation--'
     print 'Window (ps)    %f'%window
     print 'Steps          %i'%steps
     print 'Time points    %i'%npoints
     print '--Fiber--'
     print 'Length (mm)     %f'%(fiber_length*1e3)
+    print 'Alpha (1/m)     %f'%(alpha)
     print 'Gamma (W-1km-1) %f'%(gamma)
     print 'Beta2 (ps^2/km) %f'%(beta2)
     print 'Beta3 (ps^3/km) %f'%(beta3)
@@ -354,7 +225,8 @@ def run_simulation(caller=None,prop=False):
     
     print 'FiberWL (nm)    %f'%(fibWL)
     
-
+    laser_freq = 3e8/(centerwl*1e-9)
+    fiber_freq = 3e8/(fibWL*1e-9)
 
     W = pulse.W_mks
     F = W/(2*np.pi)
@@ -363,18 +235,39 @@ def run_simulation(caller=None,prop=False):
     
     
     D = fiber1.Beta2_to_D(pulse)
-    beta = fiber1.Beta2(pulse) * 1e3
+    beta = fiber1.Beta2(pulse) * 1e3 # convert ps^2/m to ps^2/km
     
     # Plot the dispersion in the left plots
-    lineL1.set_data(F[W>0][::10],D[W>0][::10])
-    lineL2.set_data(F[W>0][::10],beta[W>0][::10])
+    lineL1.set_data(F[W>0],D[W>0])
+    lineL2.set_data(F[W>0],beta[W>0])
+    fibWLindex = (np.abs(F[W>0]-fiber_freq)).argmin()
+
+    intBeta1 = scipy.integrate.cumtrapz(beta[W>0])
+    intBeta1 = intBeta1 - intBeta1[fibWLindex]
+    # lineL3a.set_data(F[W>0][:-1],intBeta1)
+    
+    intBeta2 = scipy.integrate.cumtrapz(intBeta1)
+    intBeta2 = intBeta2 - intBeta2[fibWLindex]
+    lineL3a.set_data(F[W>0][:-2],intBeta2)
+    
+    
+    # dW = W-laser_freq*2*np.pi
+    # beta2_SI = beta2*1e3*1e-24 # convert ps^2/km to s^2/m
+    # beta4_SI = beta4*1e3*1e-48 # convert ps^4/km to s^4/m
+    # phase_mismatch = beta2_SI*dW**2 + 1/12.*beta4_SI*dW**4
+    # phase_mismatch2 = phase_mismatch + 2*gamma*pump_EPP*1e-3
+    #
+    # lineL3a.set_data(F[W>0],phase_mismatch)
+    # lineL3b.set_data(F[W>0],phase_mismatch2)
+    
+    
+    
     
     # plot the pulse in the top plots
     line1a.set_data(F[W>0],dB(pulse.AW[W>0]))
     line2a.set_data(T,dB(pulse.AT))
     
-    laser_freq = 3e8/(centerwl*1e-9)
-    fiber_freq = 3e8/(fibWL*1e-9)
+
     vline1a.set_xdata((laser_freq,laser_freq))
     vline1b.set_xdata((fiber_freq,fiber_freq))
     vline2a.set_xdata((laser_freq,laser_freq))
@@ -429,13 +322,17 @@ def run_simulation(caller=None,prop=False):
 
     
 def reset_plots(caller=None):
-    for ax in (axL1,axL2,ax1,ax2): # rescale the x and ylims
+    for ax in (axL1,axL2,axL3,axL4,ax1,ax2): # rescale the x and ylims
         ax.relim(); ax.autoscale_view()
         
     ax1.set_ylim(-40,10)
     ax2.set_ylim(0,50)
     
     axL1.set_xlim(100e12,300e12)
+    
+    for ax in (axL1,axL2,axL3): # rescale the x and ylims
+        autoscale_y(ax,linenum=0)
+
     drawnow()
     
 

@@ -7,6 +7,8 @@ from pynlo.media.fibers import fiber
 from pynlo.light.DerivedPulses import SechPulse
 from matplotlib.widgets import Button, TextBox, CheckButtons
 import time
+import scipy.integrate
+from autoscale_magic import autoscale_y
 
 
 # iPulse = '0.100' # pulse duration (ps)
@@ -30,7 +32,7 @@ import time
 # iSteep = True
 
 
-# flat dispersion
+# 
 iPulse = '0.100' # pulse duration (ps)
 iWave  = '1550'    # pulse central wavelength (nm)
 iPower = '.03'     # pulse peak power (kW)
@@ -43,14 +45,13 @@ iPoints = '2**13' # simulation points
 
 iLength = '100'    # fiber length (mm)
 iGamma =  '4000'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
-iBeta2 =  '500'  # Beta_2 (ps^2/km)
-iBeta3 = '0'   # Beta_3 (ps^3/km)
-iBeta4 = '0.0000'   # Beta_4 (ps^4/km)
+iBeta2 =  '-20'  # Beta_2 (ps^2/km)
+iBeta3 = '-0.08'   # Beta_3 (ps^3/km)
+iBeta4 = '0.001'   # Beta_4 (ps^4/km)
 iFibWL = '1550'   # Center WL (nm)
 
 iRaman = True
 iSteep = True
-
 
 
 
@@ -176,7 +177,7 @@ iSteep = True
 
 
 
-auto_run = True  # determines if the simulation should be run upon running the script
+auto_run = False  # determines if the simulation should be run upon running the script
 
 
 def drawnow():
@@ -191,6 +192,8 @@ fig1 = plt.figure(figsize=(13,8))
 
 axL1 = plt.subplot2grid((3,4), (2,0))
 axL2 = plt.subplot2grid((3,4), (2,1),sharex=axL1)
+axL3 = plt.subplot2grid((3,4), (1,1),sharex=axL1)
+axL4 = plt.subplot2grid((3,4), (0,1),sharex=axL1)
 
 ax1 = plt.subplot2grid((3,4), (0,2),sharex=axL1)
 ax2 = plt.subplot2grid((3,4), (0,3))
@@ -273,6 +276,7 @@ axL1.set_xlabel('Frequency (Hz)')
 axL1.set_ylabel('D (ps/nm/km)')
 axL2.set_xlabel('Frequency (Hz)')
 axL2.set_ylabel(r'$\beta_2$ (ps$^2$/km)')
+axL3.set_ylabel('FWM phase mismatch (1/m)')
 
 ax1.set_xlabel('Frequency (Hz)')
 ax1.set_ylabel('Intensity (dB)')
@@ -281,6 +285,10 @@ ax2.set_xlabel('Time (ps)')
 
 lineL1, = axL1.plot(0,0) # make some dummy lines to hold future data
 lineL2, = axL2.plot(0,0)
+lineL3a, = axL3.plot(0,0)
+lineL3b, = axL3.plot(0,0)
+
+lineL4, = axL4.plot(0,0)
 
 line1a, = ax1.plot(0,0,color='b') 
 line1b, = ax1.plot(0,0,color='r',lw=1.5) 
@@ -292,6 +300,8 @@ vline1a = axL1.axvline(0,color='m',alpha=0.5)
 vline1b = axL1.axvline(0,color='g',lw=1.5,alpha=0.5)
 vline2a = axL2.axvline(0,color='m',alpha=0.5)
 vline2b = axL2.axvline(0,color='g',lw=1.5,alpha=0.5)
+
+hline3 =  axL3.axhline(0,color='k',lw=1.5,alpha=0.5)
 
 
 axL1.axhline(0,alpha=0.5,color='k')
@@ -354,7 +364,8 @@ def run_simulation(caller=None,prop=False):
     
     print 'FiberWL (nm)    %f'%(fibWL)
     
-
+    laser_freq = 3e8/(centerwl*1e-9)
+    fiber_freq = 3e8/(fibWL*1e-9)
 
     W = pulse.W_mks
     F = W/(2*np.pi)
@@ -363,18 +374,39 @@ def run_simulation(caller=None,prop=False):
     
     
     D = fiber1.Beta2_to_D(pulse)
-    beta = fiber1.Beta2(pulse) * 1e3
+    beta = fiber1.Beta2(pulse) * 1e3 # convert ps^2/m to ps^2/km
     
     # Plot the dispersion in the left plots
-    lineL1.set_data(F[W>0][::10],D[W>0][::10])
-    lineL2.set_data(F[W>0][::10],beta[W>0][::10])
+    lineL1.set_data(F[W>0],D[W>0])
+    lineL2.set_data(F[W>0],beta[W>0])
+    fibWLindex = (np.abs(F[W>0]-fiber_freq)).argmin()
+
+    intBeta1 = scipy.integrate.cumtrapz(beta[W>0])
+    intBeta1 = intBeta1 - intBeta1[fibWLindex]
+    # lineL3a.set_data(F[W>0][:-1],intBeta1)
+    
+    intBeta2 = scipy.integrate.cumtrapz(intBeta1)
+    intBeta2 = intBeta2 - intBeta2[fibWLindex]
+    lineL3a.set_data(F[W>0][:-2],intBeta2)
+    
+    
+    # dW = W-laser_freq*2*np.pi
+    # beta2_SI = beta2*1e3*1e-24 # convert ps^2/km to s^2/m
+    # beta4_SI = beta4*1e3*1e-48 # convert ps^4/km to s^4/m
+    # phase_mismatch = beta2_SI*dW**2 + 1/12.*beta4_SI*dW**4
+    # phase_mismatch2 = phase_mismatch + 2*gamma*pump_power*1e-3
+    #
+    # lineL3a.set_data(F[W>0],phase_mismatch)
+    # lineL3b.set_data(F[W>0],phase_mismatch2)
+    
+    
+    
     
     # plot the pulse in the top plots
     line1a.set_data(F[W>0],dB(pulse.AW[W>0]))
     line2a.set_data(T,dB(pulse.AT))
     
-    laser_freq = 3e8/(centerwl*1e-9)
-    fiber_freq = 3e8/(fibWL*1e-9)
+
     vline1a.set_xdata((laser_freq,laser_freq))
     vline1b.set_xdata((fiber_freq,fiber_freq))
     vline2a.set_xdata((laser_freq,laser_freq))
@@ -429,13 +461,17 @@ def run_simulation(caller=None,prop=False):
 
     
 def reset_plots(caller=None):
-    for ax in (axL1,axL2,ax1,ax2): # rescale the x and ylims
+    for ax in (axL1,axL2,axL3,axL4,ax1,ax2): # rescale the x and ylims
         ax.relim(); ax.autoscale_view()
         
     ax1.set_ylim(-40,10)
     ax2.set_ylim(0,50)
     
     axL1.set_xlim(100e12,300e12)
+    
+    for ax in (axL1,axL2,axL3): # rescale the x and ylims
+        autoscale_y(ax,linenum=0)
+
     drawnow()
     
 
