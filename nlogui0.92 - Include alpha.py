@@ -10,9 +10,28 @@ import time
 import scipy.integrate
 from autoscale_magic import autoscale_y
 
+# iPulse = '0.200' # pulse duration (ps)
+# iWave  = '1550'    # pulse central wavelength (nm)
+# iEPP   = '100'     # Pulse energy (pJ)
+# iGDD   = '0.0'     # Group delay dispersion (ps^2)
+# iTOD   = '0.0'     # Third order dispersion (ps^3)
+#
+# iWindow = '10.0'  # simulation window (ps)
+# iSteps  = '50'    # simulation steps
+# iPoints = '2**13' # simulation points
+#
+# iLength = '50'    # fiber length (mm)
+# iAlpha  = '0.9'   # attentuation coefficient
+# iGamma =  '1000'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
+# iBeta2 =  '-200'  # Beta_2 (ps^2/km)
+# iBeta3 = '-1'   # Beta_3 (ps^3/km)
+# iBeta4 = '0.02'   # Beta_4 (ps^4/km)
+# iFibWL = '1550'   # Center WL (nm)
+
+# conner
 iPulse = '0.200' # pulse duration (ps)
-iWave  = '1550'    # pulse central wavelength (nm)
-iEPP   = '100'     # Pulse energy (pJ)
+iWave  = '1000'    # pulse central wavelength (nm)
+iEPP   = '10000'     # Pulse energy (pJ)
 iGDD   = '0.0'     # Group delay dispersion (ps^2)
 iTOD   = '0.0'     # Third order dispersion (ps^3)
 
@@ -20,13 +39,112 @@ iWindow = '10.0'  # simulation window (ps)
 iSteps  = '50'    # simulation steps
 iPoints = '2**13' # simulation points
 
-iLength = '50'    # fiber length (mm)
-iAlpha  = '0.9'   # attentuation coefficient
-iGamma =  '1000'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
+iLength = '15'    # fiber length (mm)
+iAlpha  = '0.001'   # attentuation coefficient
+iGamma =  '20'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
+iBeta2 =  '-200'  # Beta_2 (ps^2/km)
+iBeta3 = '0.0'   # Beta_3 (ps^3/km)
+iBeta4 = '0.04'   # Beta_4 (ps^4/km)
+iFibWL = iWave   # Center WL (nm)
+
+
+# # working supercontinuum with SiN
+# iPulse = '0.200' # pulse duration (ps)
+# iWave  = '1550'    # pulse central wavelength (nm)
+# iEPP   = '100'     # Pulse energy (pJ)
+# iGDD   = '0.0'     # Group delay dispersion (ps^2)
+# iTOD   = '0.0'     # Third order dispersion (ps^3)
+#
+# iWindow = '10.0'  # simulation window (ps)
+# iSteps  = '50'    # simulation steps
+# iPoints = '2**13' # simulation points
+#
+# iLength = '20'    # fiber length (mm)
+# iAlpha  = '0.8'   # attentuation coefficient
+# iGamma =  '1400'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
+# iBeta2 =  '-200'  # Beta_2 (ps^2/km)
+# iBeta3 = '-1'   # Beta_3 (ps^3/km)
+# iBeta4 = '0.02'   # Beta_4 (ps^4/km)
+# iFibWL = '1550'   # Center WL (nm)
+
+# # Underpowered SiN superC
+# iPulse = '0.200' # pulse duration (ps)
+# iWave  = '1550'    # pulse central wavelength (nm)
+# iEPP   = '50'     # Pulse energy (pJ)
+# iGDD   = '0.0'     # Group delay dispersion (ps^2)
+# iTOD   = '0.0'     # Third order dispersion (ps^3)
+#
+# iWindow = '10.0'  # simulation window (ps)
+# iSteps  = '50'    # simulation steps
+# iPoints = '2**13' # simulation points
+#
+# iLength = '20'    # fiber length (mm)
+# iAlpha  = '0.8'   # attentuation coefficient
+# iGamma =  '1400'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
+# iBeta2 =  '-200'  # Beta_2 (ps^2/km)
+# iBeta3 = '-1'   # Beta_3 (ps^3/km)
+# iBeta4 = '0.02'   # Beta_4 (ps^4/km)
+# iFibWL = '1550'   # Center WL (nm)
+
+
+# Long, underpowered
+iPulse = '0.200' # pulse duration (ps)
+iWave  = '1550'    # pulse central wavelength (nm)
+iEPP   = '50'     # Pulse energy (pJ)
+iGDD   = '0.0'     # Group delay dispersion (ps^2)
+iTOD   = '0.0'     # Third order dispersion (ps^3)
+
+iWindow = '10.0'  # simulation window (ps)
+iSteps  = '50'    # simulation steps
+iPoints = '2**13' # simulation points
+
+iLength = '200'    # fiber length (mm)
+iAlpha  = '0.8'   # attentuation coefficient
+iGamma =  '1400'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
 iBeta2 =  '-200'  # Beta_2 (ps^2/km)
 iBeta3 = '-1'   # Beta_3 (ps^3/km)
 iBeta4 = '0.02'   # Beta_4 (ps^4/km)
 iFibWL = '1550'   # Center WL (nm)
+
+# Long, underpowered, more loss
+iPulse = '0.200' # pulse duration (ps)
+iWave  = '1550'    # pulse central wavelength (nm)
+iEPP   = '50'     # Pulse energy (pJ)
+iGDD   = '0.0'     # Group delay dispersion (ps^2)
+iTOD   = '0.0'     # Third order dispersion (ps^3)
+
+iWindow = '10.0'  # simulation window (ps)
+iSteps  = '50'    # simulation steps
+iPoints = '2**13' # simulation points
+
+iLength = '200'    # fiber length (mm)
+iAlpha  = '1.4'   # attentuation coefficient
+iGamma =  '1400'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
+iBeta2 =  '-200'  # Beta_2 (ps^2/km)
+iBeta3 = '-1'   # Beta_3 (ps^3/km)
+iBeta4 = '0.02'   # Beta_4 (ps^4/km)
+iFibWL = '1550'   # Center WL (nm)
+
+# 10 pJ doesn't work
+iPulse = '0.050' # pulse duration (ps)
+iWave  = '1550'    # pulse central wavelength (nm)
+iEPP   = '10'     # Pulse energy (pJ)
+iGDD   = '0.0'     # Group delay dispersion (ps^2)
+iTOD   = '0.0'     # Third order dispersion (ps^3)
+
+iWindow = '10.0'  # simulation window (ps)
+iSteps  = '50'    # simulation steps
+iPoints = '2**13' # simulation points
+
+iLength = '200'    # fiber length (mm)
+iAlpha  = '0.5'   # attentuation coefficient
+iGamma =  '1400'    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
+iBeta2 =  '-200'  # Beta_2 (ps^2/km)
+iBeta3 = '-1'   # Beta_3 (ps^3/km)
+iBeta4 = '0.02'   # Beta_4 (ps^4/km)
+iFibWL = '1550'   # Center WL (nm)
+
+
 
 iRaman = True
 iSteep = True
