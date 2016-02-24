@@ -20,11 +20,11 @@ Steps  = 50    # simulation steps
 Points = 2**13  # simulation points
 
 Length = 50    # fiber length (mm)
-Alpha = 0.5   # attentuation coefficient
+Alpha = 0.2   # attentuation coefficient
 Gamma = 3000    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
-Beta2 = -500 # Beta_2 (ps^2/km)
+Beta2 = -200 # Beta_2 (ps^2/km)
 Beta3 = 0   # Beta_3 (ps^3/km)
-Beta4 = 0.5   # Beta_4 (ps^4/km)
+Beta4 = 0.1  # Beta_4 (ps^4/km)
 FibWL = 1550   # Center WL (nm)
 
 iRaman = True
@@ -91,7 +91,7 @@ axL2.axhline(0, alpha=0.5, color='k')
 class BraggFiber(fiber.FiberInstance):
     
     # def add_bragg_grating(self, lambdaB=1000e-9, delta_n=0.001, scaling=1):
-    def add_bragg_grating(self, offset=50, amp=1e9, sigma=1):
+    def add_bragg_grating(self, offset=50, amp=2e5, sigma=0.5):
         
         """ The allows the dispersion from a periodic bragg grating to be included
         
@@ -159,8 +159,8 @@ class BraggFiber(fiber.FiberInstance):
             
             print pulse.center_frequency_THz
             
-            B = B + gaussian(pulse.W_THz/(2*np.pi), pulse.center_frequency_THz - self.offset, self.amp, self.sigma)
-            B = B + gaussian(pulse.W_THz/(2*np.pi), pulse.center_frequency_THz + self.offset, self.amp, self.sigma)
+            # B = B - gaussian(pulse.W_THz/(2*np.pi), pulse.center_frequency_THz - self.offset, self.amp, self.sigma)
+            B = B - gaussian(pulse.W_THz/(2*np.pi), pulse.center_frequency_THz + self.offset, self.amp, self.sigma)
             
             
                 
@@ -210,12 +210,13 @@ def run_simulation():
     fibWLindex = (np.abs(F[W > 0] - fiber_freq)).argmin()
 
     # plot the integral of beta
-    intBeta1 = scipy.integrate.cumtrapz(beta[W > 0])
-    intBeta1 = intBeta1 - intBeta1[fibWLindex]
-
-    intBeta2 = scipy.integrate.cumtrapz(intBeta1)
-    intBeta2 = intBeta2 - intBeta2[fibWLindex]
-    lineL3a.set_data(F[W > 0][:-2], intBeta2)
+    # intBeta1 = scipy.integrate.cumtrapz(beta[W > 0])
+    # intBeta1 = intBeta1 - intBeta1[fibWLindex]
+    #
+    # intBeta2 = scipy.integrate.cumtrapz(intBeta1)
+    # intBeta2 = intBeta2 - intBeta2[fibWLindex]
+    # lineL3a.set_data(F[W > 0][:-2], intBeta2)
+    lineL3a.set_data(F,fiber1.get_betas(pulse))
 
     # plot the pulse in the top plots
     line1a.set_data(F[W > 0], dB(pulse.AW[W > 0]))
