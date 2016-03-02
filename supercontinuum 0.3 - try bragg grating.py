@@ -57,11 +57,9 @@ axL1.set_xlabel('Frequency (Hz)')
 axL1.set_ylabel('D (ps/nm/km)')
 axL2.set_xlabel('Frequency (Hz)')
 axL2.set_ylabel(r'$\beta_2$ (ps$^2$/km)')
-<<<<<<< Updated upstream
 axL3.set_ylabel('Propagation const (beta) (1/m)')
-=======
 axL3.set_ylabel('Relative beta (1/m)')
->>>>>>> Stashed changes
+
 
 ax1.set_xlabel('Frequency (Hz)')
 ax1.set_ylabel('Intensity (dB)')

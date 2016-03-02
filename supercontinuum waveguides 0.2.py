@@ -10,102 +10,63 @@ from scipy.misc import factorial
 from Dispersion.katrik_betas import get_betas_from_dimensions
 
 
-Pulse = 0.125  # pulse duration (ps)
-Wave  = 1550    # pulse central wavelength (nm)
-EPP   = 40e-12     # Pulse energy (J)
-GDD   = 0.0     # Group delay dispersion (ps^2)
-TOD   = 0.0     # Third order dispersion (ps^3)
+Pulse   = 0.125  # pulse duration (ps)
+pulseWL = 1550    # pulse central wavelength (nm)
+EPP     = 40e-12     # Pulse energy (J)
+GDD     = 0.0     # Group delay dispersion (ps^2)
+TOD     = 0.0     # Third order dispersion (ps^3)
 
-Window = 10.0  # simulation window (ps)
-Steps  = 50    # simulation steps
-Points = 2**13  # simulation points
+Window  = 10.0  # simulation window (ps)
+Steps   = 40   # simulation steps
+Points  = 2**13  # simulation points
 
-Length = 40    # fiber length (mm)
-Alpha = 0.4  # attentuation coefficient
-Gamma = 3000    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
-thick = 660
-width = 2100 
-FibWL = 1550   # Center WL (nm)
+Length  = 20.0    # fiber length (mm)
+Alpha   = 0.4  # attentuation coefficient
+Gamma   = 3000    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
+thick   = 660
+widths  = (1200,1600,2000,2400) 
+fibWL   = 1550   # Center WL (nm)
 
-iRaman = False # disable raman
-iSteep = False
+Raman = True 
+Steep = True
 
 def dB(num):
     return 10 * np.log10(np.abs(num)**2)
 
 
-fig0, axs0 = plt.subplots(3,4, figsize=(13, 9), sharex=True, sharey='row')
+fig0, axs0 = plt.subplots(3,4, figsize=(13, 9), sharex=True, sharey='row') # this one is for the frequency domain
+fig1, axs1 = plt.subplots(2,4, figsize=(13, 7), sharex=True, sharey='row') # this one is for the time domain
+fig2, axs2 = plt.subplots(1,2, figsize=(14, 5))   # this is for 1D plot
 
-plt.show()
-axs
+axs0b = [ax.twinx() for ax in axs0[-1]] # set up the twin axes
+for ax in axs0b[:-1]:
+    for label in ax.get_yticklabels(): 
+        label.set_visible(False)
 
-# axL1 = plt.subplot2grid((3, 4), (2, 0))
-# axL2 = plt.subplot2grid((3, 4), (2, 1), sharex=axL1)
-# axL3 = plt.subplot2grid((3, 4), (1, 1), sharex=axL1)
-# axL4 = plt.subplot2grid((3, 4), (0, 1), sharex=axL1)
-#
-# ax1 = plt.subplot2grid((3, 4), (0, 2), sharex=axL1)
-# ax2 = plt.subplot2grid((3, 4), (0, 3))
-#
-# ax3 = plt.subplot2grid((3, 4), (1, 2), rowspan=2, sharex=axL1)
-# ax4 = plt.subplot2grid((3, 4), (1, 3), rowspan=2, sharey=ax3, sharex=ax2)
+for ax in axs0[-1]: # axs0 bottom row
+    ax.set_xlabel('Frequency (THz)')
 
+for ax in axs1[-1]: # axs1 bottom row
+    ax.set_xlabel('Time (ps)')
 
-for label in ax4.get_yticklabels():
-    label.set_visible(False)
+for axs in (axs0, axs1):
+    axs[0,0].set_ylabel('Intensity (dB)')
+    axs[1,0].set_ylabel('propagation length (mm)')
 
-plt.subplots_adjust(left=0.05, bottom=0.09, right=0.96,
-                    top=0.96, wspace=0.3, hspace=0.29)
+axs0[2,0].set_ylabel(r'$\beta_2$ (ps$^2$/km)', color='g')
+axs0b[-1].set_ylabel(  'Integrated dispersion (weird beta) (1/m)', color='m')
 
-axL1.set_xlabel('Frequency (Hz)')
-axL1.set_ylabel('D (ps/nm/km)')
-axL2.set_xlabel('Frequency (Hz)')
-axL2.set_ylabel(r'$\beta_2$ (ps$^2$/km)')
-axL3.set_ylabel('Propagation const (beta) (1/m)')
-
-ax1.set_xlabel('Frequency (Hz)')
-ax1.set_ylabel('Intensity (dB)')
-ax2.set_xlabel('Time (ps)')
+axs0b[0].set_xlabel('Frequency (THz)')
+axs0b[1].set_xlabel('Time (ps)')
 
 
-lineL1,  = axL1.plot(0, 0)  # make some dummy lines to hold future data
-lineL2,  = axL2.plot(0, 0)
-lineL3a, = axL3.plot(0, 0)
-lineL3b, = axL3.plot(0, 0)
-
-lineL4, = axL4.plot(0, 0)
-
-line1a, = ax1.plot(0, 0, color='b')
-line1b, = ax1.plot(0, 0, color='r', lw=1.5)
-
-line2a, = ax2.plot(0, 0, color='b')
-line2b, = ax2.plot(0, 0, color='r', lw=1.5)
-
-vline1a = axL1.axvline(0, color='m', alpha=0.5)
-vline1b = axL1.axvline(0, color='g', lw=1.5, alpha=0.5)
-vline2a = axL2.axvline(0, color='m', alpha=0.5)
-vline2b = axL2.axvline(0, color='g', lw=1.5, alpha=0.5)
-
-hline3 = axL3.axhline(0, color='k', lw=1.5, alpha=0.5)
-
-axL1.axhline(0, alpha=0.5, color='k')
-axL2.axhline(0, alpha=0.5, color='k')
-
-
-def run_simulation():
-
-    pump_pulse_length = Pulse
-    centerwl = Wave  # in nm
-
-    steps = Steps
+for i, width in enumerate(widths):
 
     fiber_length = Length * 1e-3
     alpha = np.log((10**(Alpha * 0.1))) * 100  # convert from dB/cm to 1/m
 
-    fibWL = FibWL
-
     # set up the pulse parameters
-    pulse = SechPulse(1, pump_pulse_length, centerwl, time_window_ps=Window,
+    pulse = SechPulse(1, Pulse, pulseWL, time_window_ps=Window,
                       GDD=GDD, TOD=TOD, NPTS=Points, frep_MHz=100, power_is_avg=False)
 
     pulse.set_epp(EPP)
@@ -117,91 +78,126 @@ def run_simulation():
                                   gamma_W_m=Gamma * 1e-3, gvd_units='ps^n/km', gain=-alpha)
         
 
-    laser_freq = 3e8 / (centerwl * 1e-9)
-    fiber_freq = 3e8 / (fibWL * 1e-9)
+    laser_freq = 3e8 / (pulseWL * 1e-9) * 1e-12
+    fiber_freq = 3e8 / (fibWL * 1e-9)   * 1e-12
 
     W = pulse.W_mks
-    F = W / (2 * np.pi)
+    F = W / (2 * np.pi) * 1e-12 # convert to THz
     T = pulse.T_ps
     xW = W[W > 0]
 
     D = fiber1.Beta2_to_D(pulse)
     beta = fiber1.Beta2(pulse) * 1e3  # convert ps^2/m to ps^2/km
 
-    # Plot the dispersion in the left plots
-    lineL1.set_data(F[W > 0], D[W > 0])
-    lineL2.set_data(F[W > 0], beta[W > 0])
-    fibWLindex = (np.abs(F[W > 0] - fiber_freq)).argmin()
+    # Plot the dispersion in the bottom panels
+    axs0[2,i].plot(F[W > 0], beta[W > 0],       color='g')
+    axs0b[ i].plot(F, fiber1.get_betas(pulse), color='m')
+    
+    axs0[2,i].axhline(0,color='g', alpha=0.5)
+    axs0b[ i].axhline(0,color='m', alpha=0.5)
+    
 
-    # plot the integral of beta
-    # intBeta1 = scipy.integrate.cumtrapz(beta[W > 0])
-    # intBeta1 = intBeta1 - intBeta1[fibWLindex]
-    #
-    # intBeta2 = scipy.integrate.cumtrapz(intBeta1)
-    # intBeta2 = intBeta2 - intBeta2[fibWLindex]
-    # lineL3a.set_data(F[W > 0][:-2], intBeta2)
-    lineL3a.set_data(F,fiber1.get_betas(pulse))
+    # plot *before* in the top panels (blue)
+    axs0[0,i].plot(F[W > 0], dB(pulse.AW[W > 0]), color='b') # freq
+    axs1[0,i].plot(T,        dB(pulse.AT),        color='b') # time
 
-    # plot the pulse in the top plots
-    line1a.set_data(F[W > 0], dB(pulse.AW[W > 0]))
-    line2a.set_data(T, dB(pulse.AT))
-
-    vline1a.set_xdata((laser_freq, laser_freq))
-    vline1b.set_xdata((fiber_freq, fiber_freq))
-    vline2a.set_xdata((laser_freq, laser_freq))
-    vline2b.set_xdata((fiber_freq, fiber_freq))
+    # plot some vertical lines
+    for ax in (axs0[0,i], axs0[2,i]):
+        # ax.axvline(fiber_freq,   color='g', alpha=0.1)
+        ax.axvline(laser_freq,   color='b', alpha=0.3)
+        ax.axvline(laser_freq*2, color='g', alpha=0.2)
 
     # Propagation
-    t = time.time()
+    t = time.time() # start a timer
 
     # set up the propagation parameters
     evol = SSFM.SSFM(local_error=0.001, USE_SIMPLE_RAMAN=True,
-                     disable_Raman=iRaman, disable_self_steepening=iSteep)
+                     disable_Raman=np.logical_not(Raman), 
+                     disable_self_steepening=np.logical_not(Steep))
 
     # propagate the pulse!
-    y, AW, AT, pulse1 = evol.propagate(
-        pulse_in=pulse, fiber=fiber1, n_steps=steps)
+    y, AW, AT, pulse1 = evol.propagate( pulse_in=pulse, 
+                                        fiber=fiber1, 
+                                        n_steps=Steps)
 
     zW_in = np.transpose(AW)[:, (W > 0)]
     zT_in = np.transpose(AT)
     zW = dB(zW_in)
     zT = dB(zT_in)
+    
+    y = y * 1e3 # convert distance to mm
 
-    line1b.set_data(F[F > 0], zW[-1])
-    line2b.set_data(T, zT[-1])
+    axs0[0,i].plot(F[F > 0], zW[-1], color='r')
+    axs1[0,i].plot(T,        zT[-1], color='r')
+    
+    axs2[0].plot(F[F > 0], zW[-1], label='%i'%width)
+    axs2[1].plot(T,        zT[-1], label='%i'%width)
+    
 
     extent = (np.min(F[F > 0]), np.max(F[F > 0]), np.min(y), np.max(y[:-1]))
-    ax3.imshow(zW, extent=extent, vmin=np.max(zW) - 60.0,
+    axs0[1,i].imshow(zW, extent=extent, vmin=np.max(zW) - 60.0,
                vmax=np.max(zW), aspect='auto', origin='lower')
-    ax3.set_xlabel('Frequency (Hz)')
-    ax3.set_ylabel('Distance (m)')
 
     extent = (np.min(T), np.max(T), np.min(y), np.max(y[:-1]))
-    ax4.imshow(zT, extent=extent, vmin=np.max(zT) - 60.0,
+    axs1[1,i].imshow(zT, extent=extent, vmin=np.max(zT) - 60.0,
                vmax=np.max(zT), aspect='auto', origin='lower')
-    ax4.set_xlabel('Delay (ps)')
 
     print 'Total time: %.2f sec' % (time.time() - t)
-
-    reset_plots()
-
-
-def reset_plots(caller=None):
-    for ax in (axL1, axL2, axL3, axL4, ax1, ax2):  # rescale the x and ylims
-        ax.relim()
-        ax.autoscale_view()
-
-    ax1.set_ylim(-40, 10)
-    ax2.set_ylim(0, 50)
-
-    axL1.set_xlim(100e12, 300e12)
-
-    for ax in (axL1, axL2, axL3):  # rescale the x and ylims
-        autoscale_y(ax, linenum=0)
+    
+    
+    for ax in (axs0[0,i], axs1[0,i]):
+        ax.set_title('Width: %i nm'%width)
+    
 
 
-run_simulation()
-plt.suptitle('thickness=%i, width=%i'%(thick, width))
+
+Pulse   = 0.125  # pulse duration (ps)
+pulseWL = 1550    # pulse central wavelength (nm)
+EPP     = 40e-12     # Pulse energy (J)
+GDD     = 0.0     # Group delay dispersion (ps^2)
+TOD     = 0.0     # Third order dispersion (ps^3)
+
+Window  = 10.0  # simulation window (ps)
+Steps   = 40   # simulation steps
+Points  = 2**13  # simulation points
+
+Length  = 20.0    # fiber length (mm)
+Alpha   = 0.4     # attentuation coefficient (dB/cm)
+Gamma   = 3000    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
+thick   = 660
+widths  = (1200,1600,2000,2400) 
+fibWL   = 1550   # Center WL (nm)
+
+Raman = True 
+Steep = True
+
+
+for fig in (fig0, fig1, fig2):
+    fig.suptitle('Thick:%inm, Pulse:%ifs, WL:%inm, Energy:%.1fpJ, Alpha:%.2fdB/cm'%(thick, 
+                              Pulse*1e3,  pulseWL, EPP*1e12,      alpha) )
+
+for ax in axs2:
+    ax.legend(fontsize=10, frameon=False)
+    
+
+for ax in axs0[0]: # top row of freq
+    ax.set_xlim(0,400)
+    ax.set_ylim(-80,0)
+
+axs2[0].set_xlim(0,400)
+axs2[0].set_ylim(-80,0)
+
+    
+for ax, axb in zip(axs0[2], axs0b):
+    ax.set_ylim(-500,500)
+    axb.set_ylim(-2e4,2e4)
+    
+for ax in axs1[0]: # top row of time
+    ax.set_ylim(-50,30)
+    
+axs2[1].set_xlim(-Window/2,Window/2) # axs2 time panel
+axs2[1].set_ylim(-50,30) # axs2 time panel
+
 plt.show()
 
 
