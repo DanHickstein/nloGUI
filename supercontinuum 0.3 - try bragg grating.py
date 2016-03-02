@@ -19,12 +19,12 @@ Window = 10.0  # simulation window (ps)
 Steps  = 50    # simulation steps
 Points = 2**15  # simulation points
 
-Length = 50    # fiber length (mm)
+Length = 20    # fiber length (mm)
 Alpha = 0.2   # attentuation coefficient
 Gamma = 3000    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
 Beta2 = -200 # Beta_2 (ps^2/km)
-Beta3 = 0   # Beta_3 (ps^3/km)
-Beta4 = 0.1  # Beta_4 (ps^4/km)
+Beta3 = 0.0   # Beta_3 (ps^3/km)
+Beta4 = 0.05  # Beta_4 (ps^4/km)
 FibWL = 1550   # Center WL (nm)
 
 iRaman = True
@@ -57,7 +57,11 @@ axL1.set_xlabel('Frequency (Hz)')
 axL1.set_ylabel('D (ps/nm/km)')
 axL2.set_xlabel('Frequency (Hz)')
 axL2.set_ylabel(r'$\beta_2$ (ps$^2$/km)')
+<<<<<<< Updated upstream
 axL3.set_ylabel('Propagation const (beta) (1/m)')
+=======
+axL3.set_ylabel('Relative beta (1/m)')
+>>>>>>> Stashed changes
 
 ax1.set_xlabel('Frequency (Hz)')
 ax1.set_ylabel('Intensity (dB)')
@@ -91,7 +95,7 @@ axL2.axhline(0, alpha=0.5, color='k')
 class BraggFiber(fiber.FiberInstance):
     
     # def add_bragg_grating(self, lambdaB=1000e-9, delta_n=0.001, scaling=1):
-    def add_bragg_grating(self, offset=50, amp=2e5, sigma=0.5):
+    def add_bragg_grating(self, offset=40, amp=2e4, sigma=1):
         
         """ The allows the dispersion from a periodic bragg grating to be included
         
@@ -160,7 +164,9 @@ class BraggFiber(fiber.FiberInstance):
             print pulse.center_frequency_THz
             
             # B = B - gaussian(pulse.W_THz/(2*np.pi), pulse.center_frequency_THz - self.offset, self.amp, self.sigma)
-            B = B - gaussian(pulse.W_THz/(2*np.pi), pulse.center_frequency_THz + self.offset, self.amp, self.sigma)
+            B = B - gaussian(pulse.W_THz/(2*np.pi), pulse.center_frequency_THz + 1 * self.offset, self.amp, self.sigma)
+            B = B + gaussian(pulse.W_THz/(2*np.pi), pulse.center_frequency_THz + 2 * self.offset, self.amp, self.sigma)
+            B = B + gaussian(pulse.W_THz/(2*np.pi), pulse.center_frequency_THz + 3 * self.offset, self.amp, self.sigma)
             
             
                 
@@ -247,13 +253,13 @@ def run_simulation():
     line2b.set_data(T, zT[-1])
 
     extent = (np.min(F[F > 0]), np.max(F[F > 0]), np.min(y), np.max(y[:-1]))
-    ax3.imshow(zW, extent=extent, vmin=np.max(zW) - 60.0,
+    ax3.imshow(zW, extent=extent, vmin=np.max(zW) - 80.0,
                vmax=np.max(zW), aspect='auto', origin='lower')
     ax3.set_xlabel('Frequency (Hz)')
     ax3.set_ylabel('Distance (m)')
 
     extent = (np.min(T), np.max(T), np.min(y), np.max(y[:-1]))
-    ax4.imshow(zT, extent=extent, vmin=np.max(zT) - 60.0,
+    ax4.imshow(zT, extent=extent, vmin=np.max(zT) - 80.0,
                vmax=np.max(zT), aspect='auto', origin='lower')
     ax4.set_xlabel('Delay (ps)')
 
@@ -267,7 +273,7 @@ def reset_plots(caller=None):
         ax.relim()
         ax.autoscale_view()
 
-    ax1.set_ylim(-40, 10)
+    ax1.set_ylim(-60, 10)
     ax2.set_ylim(0, 50)
 
     axL1.set_xlim(100e12, 300e12)
