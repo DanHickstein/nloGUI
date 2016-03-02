@@ -7,9 +7,10 @@ import time
 import scipy.integrate
 from autoscale_magic import autoscale_y
 from scipy.misc import factorial
+from Dispersion.katrik_betas import get_betas_from_dimensions
 
 
-Pulse = 0.200  # pulse duration (ps)
+Pulse = 0.125  # pulse duration (ps)
 Wave  = 1550    # pulse central wavelength (nm)
 EPP   = 40e-12     # Pulse energy (J)
 GDD   = 0.0     # Group delay dispersion (ps^2)
@@ -17,34 +18,37 @@ TOD   = 0.0     # Third order dispersion (ps^3)
 
 Window = 10.0  # simulation window (ps)
 Steps  = 50    # simulation steps
-Points = 2**15  # simulation points
+Points = 2**13  # simulation points
 
-Length = 50    # fiber length (mm)
-Alpha = 0.2   # attentuation coefficient
+Length = 40    # fiber length (mm)
+Alpha = 0.4  # attentuation coefficient
 Gamma = 3000    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
-Beta2 = -200 # Beta_2 (ps^2/km)
-Beta3 = 0   # Beta_3 (ps^3/km)
-Beta4 = 0.1  # Beta_4 (ps^4/km)
+thick = 660
+width = 2100 
 FibWL = 1550   # Center WL (nm)
 
-iRaman = True
-iSteep = True
+iRaman = False # disable raman
+iSteep = False
 
 def dB(num):
     return 10 * np.log10(np.abs(num)**2)
 
-fig1 = plt.figure(figsize=(13, 8))
 
-axL1 = plt.subplot2grid((3, 4), (2, 0))
-axL2 = plt.subplot2grid((3, 4), (2, 1), sharex=axL1)
-axL3 = plt.subplot2grid((3, 4), (1, 1), sharex=axL1)
-axL4 = plt.subplot2grid((3, 4), (0, 1), sharex=axL1)
+fig0, axs0 = plt.subplots(3,4, figsize=(13, 9), sharex=True, sharey='row')
 
-ax1 = plt.subplot2grid((3, 4), (0, 2), sharex=axL1)
-ax2 = plt.subplot2grid((3, 4), (0, 3))
+plt.show()
+axs
 
-ax3 = plt.subplot2grid((3, 4), (1, 2), rowspan=2, sharex=axL1)
-ax4 = plt.subplot2grid((3, 4), (1, 3), rowspan=2, sharey=ax3, sharex=ax2)
+# axL1 = plt.subplot2grid((3, 4), (2, 0))
+# axL2 = plt.subplot2grid((3, 4), (2, 1), sharex=axL1)
+# axL3 = plt.subplot2grid((3, 4), (1, 1), sharex=axL1)
+# axL4 = plt.subplot2grid((3, 4), (0, 1), sharex=axL1)
+#
+# ax1 = plt.subplot2grid((3, 4), (0, 2), sharex=axL1)
+# ax2 = plt.subplot2grid((3, 4), (0, 3))
+#
+# ax3 = plt.subplot2grid((3, 4), (1, 2), rowspan=2, sharex=axL1)
+# ax4 = plt.subplot2grid((3, 4), (1, 3), rowspan=2, sharey=ax3, sharex=ax2)
 
 
 for label in ax4.get_yticklabels():
@@ -88,86 +92,6 @@ axL1.axhline(0, alpha=0.5, color='k')
 axL2.axhline(0, alpha=0.5, color='k')
 
 
-class BraggFiber(fiber.FiberInstance):
-    
-    # def add_bragg_grating(self, lambdaB=1000e-9, delta_n=0.001, scaling=1):
-    def add_bragg_grating(self, offset=50, amp=2e5, sigma=0.5):
-        
-        """ The allows the dispersion from a periodic bragg grating to be included
-        
-        Parameters
-        ----------
-        lambdaB : float
-            the wavelength of the bragg grating (in meters)
-            you can calculate this as lambdaB = 2 * (index of ref.) * spacing
-        scaling : float
-            this is the "radial overlap" in the Westbrook papers
-            it just scales the effect of the grating
-        delta_n : float
-            the difference between the high and low index portions of the grating
-            this is 0.003 in the Westbrook papers.
-        
-        """
-        self.fiberspecs["bragg_grating"] = True
-        
-        # self.lambdaB = lambdaB
-        # self.delta_n = delta_n
-        # self.scaling = scaling
-        
-        self.amp = amp
-        self.sigma = sigma
-        self.offset = offset
-    
-    def get_betas(self,pulse):
-        B = np.zeros((pulse.NPTS,))
-        if self.fiberspecs["dispersion_format"] == "D":
-            self.betas = DTabulationToBetas(pulse.center_wavelength_nm,
-                                            np.transpose(np.vstack((self.x,self.y))),
-                                            self.poly_order,
-                                            DDataIsFile = False)
-            for i in range(len(self.betas)):
-                B = B + self.betas[i]/factorial(i+2)*pulse.V_THz**(i+2)
-
-        elif self.fiberspecs["dispersion_format"] == "GVD":
-            # calculate beta[n]/n! * (w-w0)^n
-            # w0 is the center of the Taylor expansion, and is defined by the
-            # fiber. the w's are from the optical spectrum
-            fiber_omega0 =  2*np.pi*self.c / self.center_wavelength # THz
-            betas = self.betas
-            for i in range(len(betas)):
-                betas[i] = betas[i]
-                B = B + betas[i] / factorial(i + 2) * (pulse.W_THz-fiber_omega0)**(i + 2)
-        else:
-            return -1 
-
-        if "bragg_grating" in self.fiberspecs and self.fiberspecs["bragg_grating"]:
-            wl = pulse.wl_mks
-            # print self.lambdaB
-            # B_at_lambdaB = B[np.argmin(np.abs(wl-self.lambdaB))]
-            #
-            # plus_minus = np.ones(np.shape(B))
-            # plus_minus[wl < self.lambdaB] = -1
-            #
-            # k = np.pi * self.delta_n * self.scaling / self.lambdaB
-            # print k
-            #
-            # B = B_at_lambdaB + plus_minus*np.sqrt( (B - B_at_lambdaB)**2 - k**2)
-            # # B = np.sqrt( (B - B_at_lambdaB)**2 - k**2)
-            
-            def gaussian(x, mu, a, sigma):
-                return a * np.exp(-((x - mu) ** 2) / 2 / sigma ** 2)
-            
-            print pulse.center_frequency_THz
-            
-            # B = B - gaussian(pulse.W_THz/(2*np.pi), pulse.center_frequency_THz - self.offset, self.amp, self.sigma)
-            B = B - gaussian(pulse.W_THz/(2*np.pi), pulse.center_frequency_THz + self.offset, self.amp, self.sigma)
-            
-            
-                
-        return B
-        
-
-
 def run_simulation():
 
     pump_pulse_length = Pulse
@@ -186,12 +110,12 @@ def run_simulation():
 
     pulse.set_epp(EPP)
     
-    fiber1 = BraggFiber()
-    fiber1.generate_fiber(fiber_length, center_wl_nm=fibWL, betas=(
-        Beta2, Beta3, Beta4), gamma_W_m=Gamma * 1e-3, gvd_units='ps^n/km', gain=-alpha)
+    betas = get_betas_from_dimensions(thick, width)
     
-    fiber1.add_bragg_grating()
-    
+    fiber1 = fiber.FiberInstance()
+    fiber1.generate_fiber(fiber_length, center_wl_nm=fibWL, betas=betas,
+                                  gamma_W_m=Gamma * 1e-3, gvd_units='ps^n/km', gain=-alpha)
+        
 
     laser_freq = 3e8 / (centerwl * 1e-9)
     fiber_freq = 3e8 / (fibWL * 1e-9)
@@ -232,7 +156,7 @@ def run_simulation():
 
     # set up the propagation parameters
     evol = SSFM.SSFM(local_error=0.001, USE_SIMPLE_RAMAN=True,
-                     disable_Raman=False, disable_self_steepening=False)
+                     disable_Raman=iRaman, disable_self_steepening=iSteep)
 
     # propagate the pulse!
     y, AW, AT, pulse1 = evol.propagate(
@@ -277,7 +201,7 @@ def reset_plots(caller=None):
 
 
 run_simulation()
-
+plt.suptitle('thickness=%i, width=%i'%(thick, width))
 plt.show()
 
 
