@@ -152,36 +152,35 @@ for i, width in enumerate(widths):
                      disable_Raman=np.logical_not(Raman), 
                      disable_self_steepening=np.logical_not(Steep))
 
-    for fiber, start_dist in zip((fiber1,fiber2), (0,Length1)):
-    # propagate the pulse!
-        y, AW, AT, pulse_out = evol.propagate( pulse_in=pulse, 
-                                            fiber=fiber, 
-                                            n_steps=Steps)
-        pulse = pulse_out
 
-        zW_in = np.transpose(AW)[:, (W > 0)]
-        zT_in = np.transpose(AT)
-        zW = dB(zW_in)
-        zT = dB(zT_in)
+    y, AW, AT, pulse_out = evol.propagate( pulse_in=pulse, fiber=fiber, n_steps=Steps)
+    pulse = pulse_out
     
-        y = y * 1e3 # convert distance to mm
+    if length2 != None:
+        y2, AW2, AT2, pulse_out = evol.propagate( pulse_in=pulse_out, fiber=fiber, n_steps=Steps)
+        AW = np.hstack(AW, AW2)
+        AT = np.hstack(AT, AT2)
+ 
+    zW = dB( np.transpose(AW)[:, (W > 0)] )
+    zT = dB( np.transpose(AT) )
 
-        axs0[0,i].plot(F[F > 0], zW[-1], color='r')
-        axs1[0,i].plot(T,        zT[-1], color='r')
+    y = y * 1e3 # convert distance to mm
+
+    axs0[0,i].plot(F[F > 0], zW[-1], color='r')
+    axs1[0,i].plot(T,        zT[-1], color='r')
+
+    axs2[0].plot(F[F > 0], zW[-1], label='%i'%width)
+    axs2[1].plot(T,        zT[-1], label='%i'%width)
     
-        axs2[0].plot(F[F > 0], zW[-1], label='%i'%width)
-        axs2[1].plot(T,        zT[-1], label='%i'%width)
-    
+    extent = (np.min(F[F > 0]), np.max(F[F > 0]), np.min(y)+start_dist, np.max(y[:-1])+start_dist)
+    axs0[1,i].imshow(zW, extent=extent, vmin=np.max(zW) - 60.0,
+               vmax=np.max(zW), aspect='auto', origin='lower')
 
-        extent = (np.min(F[F > 0]), np.max(F[F > 0]), np.min(y)+start_dist, np.max(y[:-1])+start_dist)
-        axs0[1,i].imshow(zW, extent=extent, vmin=np.max(zW) - 60.0,
-                   vmax=np.max(zW), aspect='auto', origin='lower')
+    extent = (np.min(T), np.max(T), np.min(y)+start_dist, np.max(y[:-1])+start_dist)
+    axs1[1,i].imshow(zT, extent=extent, vmin=np.max(zT) - 60.0,
+               vmax=np.max(zT), aspect='auto', origin='lower')
 
-        extent = (np.min(T), np.max(T), np.min(y)+start_dist, np.max(y[:-1])+start_dist)
-        axs1[1,i].imshow(zT, extent=extent, vmin=np.max(zT) - 60.0,
-                   vmax=np.max(zT), aspect='auto', origin='lower')
-
-        print 'Total time: %.2f sec' % (time.time() - t)
+    print 'Total time: %.2f sec' % (time.time() - t)
     
     
     for ax in (axs0[0,i], axs1[0,i]):
@@ -196,7 +195,7 @@ for fig in (fig0, fig1, fig2):
 
 for ax in axs2:
     ax.legend(fontsize=10, frameon=False)
-    
+
 
 for ax in axs0[0]: # top row of freq
     ax.set_xlim(0,400)
