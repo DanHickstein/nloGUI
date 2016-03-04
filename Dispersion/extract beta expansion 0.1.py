@@ -117,7 +117,7 @@ def calcGVD(wavelengths,RI):
 # thicknesses = (350,500,600,660,950,1050)
 thicknesses = (500,600,660,950)
 
-fig, axs = plt.subplots(len(thicknesses),2,figsize=(12,11))
+fig, axs = plt.subplots(len(thicknesses),2,figsize=(14,10))
 
 # loop over each row of axes and each thickness
 for axrow, thick in zip(axs, thicknesses):
@@ -169,5 +169,5 @@ axs[0,0].set_title('D (ps/nm/km)', weight='bold')
 # axs[0,2].set_title('D (ps/nm/km)'   , weight='bold')
 
 plt.tight_layout() # make the axes closer together
-# plt.savefig('convert to beta.png',dpi=100)
+plt.savefig('SiN betas.png',dpi=100)
 plt.show()

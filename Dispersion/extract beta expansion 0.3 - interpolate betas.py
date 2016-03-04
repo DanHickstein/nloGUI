@@ -205,7 +205,7 @@ axs[0,0].set_title('D (ps/nm/km)', weight='bold')
 # axs[0,2].set_title('D (ps/nm/km)'   , weight='bold')
 
 plt.tight_layout() # make the axes closer together
-# plt.savefig('convert to beta.png',dpi=100)
+plt.savefig('convert to beta.png',dpi=100)
 
 
 

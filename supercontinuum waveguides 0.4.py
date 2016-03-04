@@ -69,7 +69,7 @@ axs2[0].set_xlabel('Frequency (THz)')
 axs2[1].set_xlabel('Time (ps)')
 
 axs0[2,0].set_ylabel(r'$\beta_2$ (ps$^2$/km)', color='g')
-axs0b[-1].set_ylabel(  'Integrated dispersion (weird beta) (1/m)', color='m')
+axs0b[-1].set_ylabel(  'Integrated dispersion (1/m)', color='m')
 
 axs0b[0].set_xlabel('Frequency (THz)')
 axs0b[1].set_xlabel('Time (ps)')
@@ -168,7 +168,7 @@ for i, width in enumerate(widths):
 
 for fig in (fig0, fig1, fig2):
     fig.suptitle('Thick:%inm, Pulse:%ifs, WL:%inm, Energy:%.1fpJ, Alpha:%.2fdB/cm'%(thick, 
-                              Pulse*1e3,  pulseWL, EPP*1e12,      alpha) )
+                              Pulse*1e3,  pulseWL, EPP*1e12,      Alpha) )
 
 for ax in axs2:
     ax.legend(fontsize=10, frameon=False)

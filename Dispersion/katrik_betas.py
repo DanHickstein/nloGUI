@@ -14,7 +14,7 @@ def get_betas_from_dimensions(thickness, width, polyOrder=polyOrder):
     betas = np.zeros(polyOrder+1)
     
     for i in range(polyOrder+1):
-        betas[i] = scipy.interpolate.griddata((t, w), b[:,i], (thickness,width), method='nearest')
+        betas[i] = scipy.interpolate.griddata((t, w), b[:,i], (thickness,width), method='linear')
         # betas[i] = f(thickness, width)
         
     print 'thick:%i, width:%i' %(thickness, width),
