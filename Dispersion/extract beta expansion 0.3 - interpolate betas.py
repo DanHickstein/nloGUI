@@ -147,6 +147,7 @@ for axrow, thick in zip(axs, thicknesses):
         # keys: ['param_vary', '__globals__', 'n_eff_aux', 'vg_aux', 'gamma_aux', '__header__', '__version__']
         waves = data['param_vary'][0]
         neff  = data['n_eff_aux'][:,4]
+        print data['gamma_aux']
         neff  = np.abs(neff)
         
         waves = waves*1e9 # convert meters to nm
