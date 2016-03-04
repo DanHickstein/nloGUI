@@ -20,19 +20,19 @@ Window  = 10.0  # simulation window (ps)
 Steps   = 50   # simulation steps
 Points  = 2**13  # simulation points
 
-Length1  = 35.0   # fiber length (mm)
-Length2  = 1.0    # fiber length (mm)
-deltaW   = 700     # change in fiber width (nm)
+Length1  = 10.0   # fiber length (mm)
+Length2  = 15.0    # fiber length (mm)
+deltaW   = 1100     # change in fiber width (nm)
 
-Alpha   = 0.0 # attentuation coefficient
-Gamma   = 3000    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
+Alpha   = 0.2 # attentuation coefficient
+Gamma   = 2000    # Gamma (1/(W km) -- 1400 is for Silicon Nitride
 
 # thick   = 600
 # widths  = (1200,1600,2000,2400)
 
 thick   = 660
 # widths  = (1700,2100,2500,2900)
-widths  = (2400, 2600)
+widths  = (1700, 2600)
 
 
 fibWL   = 1550   # Center WL (nm)
